@@ -336,14 +336,16 @@
     ctx.stroke();
     if(d.logo){
       ctx.fillStyle = C_CONTENT;   // KK 文字 = 内容色
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';    // 水平: 严格以圆心 x 为中心
+      ctx.textBaseline = 'middle'; // 垂直: 严格以圆心 y 为中心 (middle = 文字几何外框中心 对齐圆心)
+      // ★ 绑定关系: fillText(x,y) 严格 = 圆心 (logoCx, logoCy) → 手机/桌面同严格居中, 不要任何 magic offset
       const l = String(d.logo).length;
       let f = 108;
       if(l===3) f = 90;
       else if(l>=4) f = 76;
-      ctx.font = `500 ${f}px "Barlow Condensed", sans-serif`;
-      ctx.fillText(d.logo.substring(0,3), logoCx, logoCy + 3);
+      // Fallback: 手机未加载 Barlow 时用 system-ui, 避免字体度量漂移影响居中
+      ctx.font = `500 ${f}px "Barlow Condensed", system-ui, -apple-system, "Helvetica Neue", sans-serif`;
+      ctx.fillText(String(d.logo).substring(0,3), logoCx, logoCy);
     }
 
     // 3. 三个框
