@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DIT 项目名片生成器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Barlow:ital,wght@0,500;0,700;1,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f6fa; --card:#fff; --border:#e2e6ee; --text:#1a2233;
+    --dim:#6b7488; --accent:#2563eb; --accent-2:#1e40af;
+    --radius:12px; --btn-h:46px;
+    --font-sans:'Barlow Condensed','Barlow','PingFang SC','Hiragino Sans GB','Microsoft YaHei','SimHei',sans-serif;
+    --font-ui:'PingFang SC','Hiragino Sans GB','Microsoft YaHei','SimHei',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:var(--font-ui);font-weight:500;background:var(--bg);color:var(--text);line-height:1.45;padding:16px;max-width:720px;margin:0 auto}
+  header{text-align:center;margin:4px 0 18px}
+  header h1{font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:var(--font-sans)}
+  header p{font-size:12px;color:var(--dim);margin-top:4px;letter-spacing:.3px}
+  .step{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(20,30,60,.04)}
+  .step-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0;letter-spacing:.5px}
+  .step-head h2{font-size:16px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase}
+  .step-head .tip{margin-left:auto;font-size:11px;color:var(--dim);letter-spacing:.5px;text-transform:uppercase}
+  .form-grid{display:grid;grid-template-columns:1fr;gap:14px}
+  .form-card{border:1px solid var(--border);border-radius:12px;padding:14px;background:#fff;box-shadow:0 2px 8px rgba(20,30,60,.04)}
+  .form-card .card-title{font-size:12px;font-weight:800;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+  label{display:block;font-size:11px;color:var(--dim);margin:10px 0 4px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+  input[type=text],input[type=number],select,input[type=color]{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font-ui);font-weight:500;color:var(--text);background:#fff;transition:.15s}
+  input[type=color]{height:42px;padding:3px;cursor:pointer}
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row-3{display:grid;grid-template-columns:1.4fr 1fr;gap:10px}
+  .checkbox-row{display:flex;align-items:center;gap:8px;margin:10px 0 2px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:linear-gradient(135deg,#f8fafc,#f1f5f9)}
+  .checkbox-row input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);cursor:pointer}
+  .checkbox-row span{font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text)}
+  .checkbox-row .sub{margin-left:auto;font-size:11px;color:var(--dim);letter-spacing:.4px;text-transform:none}
+  .credit-line{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+  .credit-line:last-child{margin-bottom:0}
+  .preview-wrap{display:flex;justify-content:center;padding:10px 0}
+  canvas{
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 14px 30px rgba(10,20,40,.18), 0 4px 10px rgba(10,20,40,.08);
+    display: block;
+  }
+  .preview-meta{text-align:center;font-size:10px;color:var(--dim);margin-top:8px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+  button{flex:1;height:var(--btn-h);padding:0 16px;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:var(--font-ui);letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:.15s;line-height:1.05}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .btn-export{background:var(--accent);color:#fff}
+  .btn-export:active{background:var(--accent-2)}
+  .btn-reset{flex:0 0 96px;background:#fff;border:1px solid var(--border);color:var(--dim);font-weight:700}
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:#1a2233;color:#fff;padding:11px 22px;border-radius:10px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:99;max-width:85%;text-align:center;font-weight:600}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  footer{text-align:center;font-size:10px;color:var(--dim);margin-top:8px;padding:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
+  @media (max-width:520px){
+    body{padding:12px}
+    header h1{font-size:20px;letter-spacing:.6px}
+    .row-2,.row-3,.credit-line{grid-template-columns:1fr}
+    button{font-size:13px;letter-spacing:1px}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>DIT CREDIT CARD MAKER</h1>
+    <p>Developed by 酷卡</p>
+  </header>
+
+  <!-- 1 编辑 -->
+  <section class="step">
+    <div class="step-head">
+      <span class="step-num">01</span><h2>卡片编辑</h2>
+    </div>
+    <div class="form-grid" id="formGrid">
+
+      <!-- 外观 -->
+      <div class="form-card">
+        <div class="card-title">外观 · APPEARANCE</div>
+        <div class="row-2">
+          <div>
+            <label>背景色 BACKGROUND</label>
+            <input type="color" id="inpBgColor" value="#FFD55E">
+          </div>
+          <div>
+            <label>LOGO 文字 (1-3字)</label>
+            <input type="text" id="inpLogo" maxlength="3" value="KK">
+          </div>
+        </div>
+        <div class="row-2" style="margin-top:10px">
+          <div>
+            <label>标题颜色 (三个Section标题)</label>
+            <input type="color" id="inpTitleColor" value="#494E57">
+          </div>
+          <div>
+            <label>内容颜色 (工作室/项目/Credit)</label>
+            <input type="color" id="inpContentColor" value="#1F2328">
+          </div>
+        </div>
+      </div>
+
+      <!-- DIT Studio -->
+      <div class="form-card">
+        <div class="card-title">第一部分 · DIT STUDIO</div>
+        <label>团队名称 TEAM NAME</label>
+        <input type="text" id="inpTeam" value="KK SH">
+      </div>
+
+      <!-- Project -->
+      <div class="form-card">
+        <div class="card-title">第二部分 · PROJECT</div>
+        <label>项目名称 PROJECT NAME</label>
+        <input type="text" id="inpProject" value="Commercial - AUDI">
+      </div>
+
+      <!-- Credit -->
+      <div class="form-card">
+        <div class="card-title">第三部分 · CREDIT (Talented Crew - DIT Dept)</div>
+        <div class="credit-line">
+          <div>
+            <label>职位 1</label>
+            <input type="text" class="cr-pos" value="DIT Supervisor" data-i="0">
+          </div>
+          <div>
+            <label>姓名 1</label>
+            <input type="text" class="cr-name" value="AJ" data-i="0">
+          </div>
+        </div>
+        <div class="credit-line">
+          <div>
+            <label>职位 2</label>
+            <input type="text" class="cr-pos" value="DIT On-set" data-i="1">
+          </div>
+          <div>
+            <label>姓名 2</label>
+            <input type="text" class="cr-name" value="AJ Lazy" data-i="1">
+          </div>
+        </div>
+        <div class="credit-line">
+          <div>
+            <label>职位 3</label>
+            <input type="text" class="cr-pos" value="DIT Assistant" data-i="2">
+          </div>
+          <div>
+            <label>姓名 3</label>
+            <input type="text" class="cr-name" value="/" data-i="2">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 2 预览 -->
+  <section class="step">
+    <div class="step-head">
+      <span class="step-num">02</span><h2>卡片预览</h2>
+      <span class="tip">4 : 5 · 800 × 1000 HD</span>
+    </div>
+    <div class="preview-wrap">
+      <canvas id="canvas" width="800" height="1000"></canvas>
+    </div>
+  </section>
+
+  <!-- 3 下载 -->
+  <section class="step">
+    <div class="step-head">
+      <span class="step-num">03</span><h2>卡片下载</h2>
+      <span class="tip">JPG 格式 · 白底压缩可选</span>
+    </div>
+    <div class="actions">
+      <button class="btn-export" id="exportBtn">下载 JPG</button>
+      <button class="btn-reset" id="clearBtn">清空</button>
+    </div>
+  </section>
+
+  <footer>v1.0.0 · DIT Credit Card · 4:5 Portrait</footer>
+  <div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const toastEl = document.getElementById('toast');
+  const W = 800, H = 1000;   // 4 : 5
+
+  /* ==========================================================
+     1:1 复刻参考图
+     字体就两种: 英文 Barlow Condensed  |  中文 PingFang SC
+     ==========================================================
+     颜色层级 (参考图实际配色 - 不是全黑,有深浅对比):
+       COL.TITLE    = #1F2328 近黑   : Section 标题(3个框内标题)
+       COL.CONTENT  = #494E57 中深灰 : 工作室名/项目名/职位/姓名 所有内容
+       COL.LOGO_TXT = #424750 中灰   : Logo 文字 KK
+       COL.LOGO_RING= #1F2328 近黑   : Logo 圆环描边
+       COL.BOX_BORDER=#5A5F68 浅灰   : 三个框的细描边
+     ==========================================================
+     字号层级 (完全统一):
+       L1 标题 : italic 700 44 Barlow Condensed → 3个Section标题 完全同字号
+       L2 主体 : 500 50px → 工作室名(中)/项目名(英) 完全同字号
+       L3 职位 : 500 40px Barlow Condensed → 三行统一
+       L4 姓名 : 600 44px Barlow Condensed → 三行统一 (比职位大4px 稍粗)
+       Logo KK : 500 108px Barlow Condensed (不粗笨 中等粗细)
+  */
+  const COL = {
+    TITLE:      '#494E57',   // 标题默认灰色
+    CONTENT:    '#1F2328',   // 内容默认深黑色
+    LOGO_TXT:   '#424750',
+    LOGO_RING:  '#1F2328',
+    BOX_BORDER: '#5A5F68'
+  };
+  const fonts = {
+    L1: '500 44px "Barlow Condensed", sans-serif',   // 标题: 直立 字重500
+    L2: '500 50px "Barlow Condensed","PingFang SC","Microsoft YaHei",sans-serif',  // 所有内容行统一规格! 工作室/项目/职位/姓名
+    L3: '500 50px "Barlow Condensed", sans-serif',   // 职位: 和工作室/项目名 同规格 一致!
+    L4: '500 50px "Barlow Condensed", sans-serif',   // 姓名: 和职位 同字体同字重同大小! 不再 600 44
+    LOGO: '500 108px "Barlow Condensed", sans-serif'
+  };
+  // 统一间距系统 (Box2 + Box3 整体上移 10px):
+  //   Logo底 → Box1顶 = 50
+  //   Box1底 → Box2顶 = 40   (★ -10 让 Box2/Box3 组上移 10)
+  //   Box2底 → Box3顶 = 50   (★ 保持, Box3 跟着 Box2 一起上移)
+  //   Box3底 → 画布底 = 50   (保持原需求底部留白 50 → 总高度 = 296+50=346 由 Box2/3 决定反推)
+  // LogoCy=155, Logo底=155+88=243 + 50 → 293(Box1.top)
+  //   293 + 140 + 40 + 140 + 50 = 663(Box3.top) → Box3.bottom = 663+296 = 959, 距底 = 1000-959=41 差9 → 让 GAP_3_TO_BOTTOM 保持 50, 整体通过 H_BIG 调节?
+  //   实际上直接改 BOX 间距常量, 重新计算 drawBox 的 y 轴累加即可保证底部留白 = BOX3.bottom + GAP_3_TO_BOTTOM = 1000.
+  const GAP = 50;
+  const BOX = {
+    H_SMALL: 140,
+    H_BIG:   287,   // 反解保证 Box3 距底 = 50: Box3.top=663 → Box3.bottom = 1000-50 = 950 → H_BIG=950-663=287
+    GAP_1_TO_2: GAP - 10,   // = 40 (上移 10: Box2 / Box3 全体)
+    GAP_2_TO_3: GAP,        // = 50 (保持, 让 Box3 跟着 Box2 一起移动)
+    LOGO_TO_BOX: GAP,
+    BOTTOM_PAD: GAP         // = 50
+  };
+  const LOGO = {
+    D: 176,
+    CX: W / 2,   // 备用硬编码，实际运行时强制对齐到 BOX_CENTER_X (见下方 render 内)
+    CY: 155      // Logo整体再下移5px: 原 150 → 155
+  };
+  // 框内两行相对中心 (Box1/Box2 完全镜像 偏移值完全一致)
+  const BOX_INNER = {
+    TITLE_OFFSET_FROM_CENTER:   -13,   // DIT Studio / Project 标题下移2px: 原 -15 → -13 (距顶=70-13=57)
+    CONTENT_OFFSET_FROM_CENTER:  39
+  };
+  // Box3 Credit 内部偏移 (最后一行距框底=50, 高=287):
+  // 约束: TITLE_TOP_GAP + TITLE_TO_FIRST + 2*LINE_GAP = 287 - 50 = 237
+  //  三行(除标题)再下移5px: TITLE_TO_FIRST = 72 + 5 = 77
+  //  为保持最后距底=50(不溢出), 行间距各再收窄2.5: LINE_GAP = 52.5 - 2.5 = 50
+  //  校验: 60 + 77 + 2×50 = 60+77+100 = 237 ✅
+  const CREDIT = {
+    TITLE_TOP_GAP: 60,
+    TITLE_TO_FIRST: 77,
+    LINE_GAP: 50,
+    PAD_H: 56
+  };
+
+  const DEFAULTS = {
+    bg:'#FFD55E', titleColor:'#494E57', contentColor:'#1F2328', logo:'KK', team:'KK SH',
+    project:'Commercial - AUDI',
+    credits:[
+      {p:'DIT Supervisor', n:'AJ'},
+      {p:'DIT On-set',     n:'AJ Lazy'},
+      {p:'DIT Assistant',  n:'/'}
+    ]
+  };
+
+  const $ = (id)=>document.getElementById(id);
+  const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
+  function showToast(t, err){
+    toastEl.textContent = t;
+    toastEl.className = 'toast show' + (err?' err':'');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=>toastEl.classList.remove('show'), 1800);
+  }
+  function readForm(){
+    return {
+      bg: $('inpBgColor').value,
+      titleColor: $('inpTitleColor').value,
+      contentColor: $('inpContentColor').value,
+      logo: ($('inpLogo').value || '').trim().toUpperCase(),
+      team: ($('inpTeam').value || '').trim(),
+      project: ($('inpProject').value || '').trim(),
+      credits: $$('.cr-pos').map((inp,i)=>({
+        p: inp.value.trim(),
+        n: ($$('.cr-name')[i].value || '').trim()
+      }))
+    };
+  }
+  function wrapText(c, text, maxW){
+    // 简单截断:超过 maxW 就按 ... 处理,这里够用
+    const words = String(text || '').split('');
+    let line = '', lines = [];
+    for(const w of words){
+      const test = line + w;
+      if(c.measureText(test).width > maxW){
+        lines.push(line);
+        line = w;
+      }else line = test;
+    }
+    if(line) lines.push(line);
+    return lines.slice(0, 2);  // 最多 2 行
+  }
+
+  /* ============ 渲染 - 1:1 复刻参考图 ============ */
+  function draw(){
+    const d = readForm();
+    ctx.save();
+
+    // 1. 背景色 (用户可改)
+    ctx.fillStyle = d.bg || '#FFD55E';
+    ctx.fillRect(0, 0, W, H);
+
+    const INNER = 64;   // 左右边距
+    const L = INNER, R = W - INNER, CW = R - L;
+    const BOX_CENTER_X = L + CW / 2;   // 框本身的水平中心 (不再依赖 W/2, 严格相对框居中)
+
+    // 颜色映射(用户统一控制):
+    //   主色 TITLE_COLOR → 三个Section标题 + Logo圆环 (原来 COL.TITLE / COL.LOGO_RING)
+    //   次色 CONTENT_COLOR → 工作室/项目/职位/姓名 + Logo文字 (原来 COL.CONTENT / COL.LOGO_TXT)
+    const C_TITLE   = d.titleColor   || COL.TITLE;
+    const C_CONTENT = d.contentColor || COL.CONTENT;
+
+    // 2. 顶部 Logo (用统一布局常量 LOGO.D / LOGO.CY, 描边2.5px, BOX_BORDER色)
+    //    ★ Logo圆心 强制对齐到 BOX_CENTER_X (=L+CW/2) = 和三框完全水平居中一致
+    const logoD = LOGO.D, logoCx = BOX_CENTER_X, logoCy = LOGO.CY;
+    ctx.strokeStyle = C_TITLE;     // 圆环颜色 跟随"标题颜色"
+    ctx.lineWidth = 2;      // Logo圈 -0.5px粗: 原 2.5 → 2.0
+    ctx.beginPath();
+    ctx.arc(logoCx, logoCy, logoD/2, 0, Math.PI*2);
+    ctx.stroke();
+    if(d.logo){
+      ctx.fillStyle = C_CONTENT;   // KK 文字 = 内容色
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const l = String(d.logo).length;
+      let f = 108;
+      if(l===3) f = 90;
+      else if(l>=4) f = 76;
+      ctx.font = `500 ${f}px "Barlow Condensed", sans-serif`;
+      ctx.fillText(d.logo.substring(0,3), logoCx, logoCy + 3);
+    }
+
+    // 3. 三个框
+    let y = (logoCy + logoD/2) + BOX.LOGO_TO_BOX;
+    function drawBox(y, h){
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = COL.BOX_BORDER;
+      ctx.strokeRect(L, y, CW, h);
+      return { top:y, h, centerY: y + h/2, bot:y + h };
+    }
+
+    // --- Box 1: DIT Studio ---
+    const b1 = drawBox(y, BOX.H_SMALL);
+    y += BOX.H_SMALL + BOX.GAP_1_TO_2;
+    {
+      const cy = b1.centerY;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = C_TITLE;
+      ctx.font = fonts.L1;
+      ctx.fillText('DIT Studio', BOX_CENTER_X, cy + BOX_INNER.TITLE_OFFSET_FROM_CENTER);
+      ctx.fillStyle = C_CONTENT;
+      ctx.font = fonts.L2;
+      ctx.fillText(d.team || '—', BOX_CENTER_X, cy + BOX_INNER.CONTENT_OFFSET_FROM_CENTER);
+    }
+
+    // --- Box 2: Project ---
+    const b2 = drawBox(y, BOX.H_SMALL);
+    y += BOX.H_SMALL + BOX.GAP_2_TO_3;
+    {
+      const cy = b2.centerY;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = C_TITLE;
+      ctx.font = fonts.L1;
+      ctx.fillText('Project', BOX_CENTER_X, cy + BOX_INNER.TITLE_OFFSET_FROM_CENTER);
+      const text = d.project || '—';
+      ctx.fillStyle = C_CONTENT;
+      let s = 50;
+      ctx.font = `500 ${s}px "Barlow Condensed","PingFang SC","Microsoft YaHei",sans-serif`;
+      while(ctx.measureText(text).width > CW - 56 && s > 30){
+        s -= 2;
+        ctx.font = `500 ${s}px "Barlow Condensed","PingFang SC","Microsoft YaHei",sans-serif`;
+      }
+      ctx.fillText(text, BOX_CENTER_X, cy + BOX_INNER.CONTENT_OFFSET_FROM_CENTER);
+    }
+
+    // --- Box 3: Talented Crew ---
+    const b3 = drawBox(y, BOX.H_BIG);
+    {
+      const cTitleY = b3.top + CREDIT.TITLE_TOP_GAP;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = C_TITLE;
+      ctx.font = fonts.L1;
+      const title3 = 'Talented Crew - DIT Dept';
+      let s = 44;
+      ctx.font = `500 ${s}px "Barlow Condensed", sans-serif`;   // 标题: 去掉斜体 + 字重500(与fonts.L1一致)
+      while(ctx.measureText(title3).width > CW - 56 && s > 28){
+        s -= 2;
+        ctx.font = `500 ${s}px "Barlow Condensed", sans-serif`;
+      }
+      ctx.fillText(title3, BOX_CENTER_X, cTitleY);
+
+      const colLeft  = L + CREDIT.PAD_H;
+      const colRight = R - CREDIT.PAD_H;
+      const colW = (colRight - colLeft - 60);  // 两栏间留 60px 空隙
+      let lineY = cTitleY + CREDIT.TITLE_TO_FIRST;
+      for(let i=0;i<3;i++){
+        const cr = d.credits[i] || {p:'', n:''};
+        // 左: 职位 (和工作室/项目同规格 500 50, 长则自动缩 - 左右栏各占一半,留 60 间距)
+        let sp = 50;
+        ctx.font = `500 ${sp}px "Barlow Condensed","PingFang SC","Microsoft YaHei",sans-serif`;
+        while(ctx.measureText(cr.p || '—').width > colW/2 && sp > 30){
+          sp -= 2;
+          ctx.font = `500 ${sp}px "Barlow Condensed","PingFang SC","Microsoft YaHei",sans-serif`;
+        }
+        ctx.textAlign = 'left';
+        ctx.fillStyle = C_CONTENT;
+        ctx.fillText(cr.p || '—', colLeft, lineY);
+        // 右: 姓名 (和职位完全同规格 不再600/44 统一500/50)
+        let sn = 50;
+        ctx.font = `500 ${sn}px "Barlow Condensed","PingFang SC","Microsoft YaHei",sans-serif`;
+        while(ctx.measureText(cr.n || '/').width > colW/2 && sn > 30){
+          sn -= 2;
+          ctx.font = `500 ${sn}px "Barlow Condensed","PingFang SC","Microsoft YaHei",sans-serif`;
+        }
+        ctx.textAlign = 'right';
+        ctx.fillText(cr.n || '/', colRight, lineY);
+        lineY += CREDIT.LINE_GAP;
+      }
+    }
+
+    ctx.restore();
+  }
+
+  /* ============ 事件 ============ */
+  function bindAll(){
+    const inputs = document.querySelectorAll('#formGrid input');
+    inputs.forEach(i => i.addEventListener('input', draw));
+    $('clearBtn').addEventListener('click', ()=>{
+      $('inpBgColor').value = DEFAULTS.bg;
+      $('inpTitleColor').value = DEFAULTS.titleColor;
+      $('inpContentColor').value = DEFAULTS.contentColor;
+      $('inpLogo').value = DEFAULTS.logo;
+      $('inpTeam').value = DEFAULTS.team;
+      $('inpProject').value = DEFAULTS.project;
+      $$('.cr-pos').forEach((e,i)=> e.value = DEFAULTS.credits[i].p);
+      $$('.cr-name').forEach((e,i)=> e.value = DEFAULTS.credits[i].n);
+      draw();
+      showToast('已恢复默认');
+    });
+    $('exportBtn').addEventListener('click', ()=>{
+      try{
+        draw();
+        // JPG:合成白底(如果背景有透明没画就用白)
+        const tmp = document.createElement('canvas');
+        tmp.width = W; tmp.height = H;
+        const tctx = tmp.getContext('2d');
+        tctx.fillStyle = '#fff';
+        tctx.fillRect(0,0,W,H);
+        tctx.drawImage(canvas, 0, 0);
+        const url = tmp.toDataURL('image/jpeg', 0.96);
+        const a = document.createElement('a');
+        const ts = new Date().toISOString().replace(/[-:]|\.\d{3}Z/g,'').replace('T','_');
+        a.download = `dit-credit-card_${ts}.jpg`;
+        a.href = url;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(()=>a.remove(), 500);
+        showToast('已下载 JPG ✓');
+      }catch(e){
+        console.error(e);
+        showToast('导出失败,请重试', true);
+      }
+    });
+  }
+
+  // 预加载 Barlow Condensed 确保 Logo 字体不 fallback(强制 500 + italic700 两种规格)
+  function loadFontsThenDraw(){
+    const f1 = (document.fonts && document.fonts.load) ? document.fonts.load('italic 700 44px "Barlow Condensed"') : Promise.resolve();
+    const f2 = (document.fonts && document.fonts.load) ? document.fonts.load('500 108px "Barlow Condensed"') : Promise.resolve();
+    Promise.all([f1, f2]).finally(()=>{ draw(); });
+  }
+
+  bindAll();
+  loadFontsThenDraw();
+})();
+</script>
+</body>
+</html>
